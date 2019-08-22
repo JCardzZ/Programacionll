@@ -1,4 +1,4 @@
- package ModeloClases;
+package ModeloClases;
 
 import Conexion.Consulta;
 import Modelo.Clientes;
@@ -28,20 +28,30 @@ public class Cliente extends Consulta implements Printable {
     private Object[] object;
     private JPanel panel;
 
-    public void InsertarCliente(String ID, String Nombre, String Apellido, String Direccion, String Telefono) {
-        Sql = "Insert Into Clientes(ID,Nombres,Apellidos,Direccion,Telefono)" + "Values(?,?,?,?,?)";
-        object = new Object[]{ID, Nombre, Apellido, Direccion, Telefono};
-        Insertar(Sql, object);
+    public boolean InsertarCliente(String ID, String Nombre, String Apellido, String Direccion, String Telefono) {
+        boolean valor = false;
         cliente = clientes();
-        cliente.forEach(item -> {
-            IDCliente = item.getIdCliente();
-            Id = item.getID();
-        });
-        Sql = "Insert Into ReporteClientes (IDCliente,SaldoActual,FechaActual,"
-                + "UltimoPago,FechaPago,ID)"
-                + "Values(?,?,?,?,?,?)";
-        object = new Object[]{IDCliente, "$0.00", "Sin Fecha", "$0.00", "Sin Fecha", Id};
-        Insertar(Sql, object);
+        clienteFilter = cliente.stream()
+                .filter(c -> c.getID().equals(ID))
+                .collect(Collectors.toList());
+        if (0 == clienteFilter.size()) {
+
+            Sql = "Insert Into Clientes(ID,Nombres,Apellidos,Direccion,Telefono)" + "Values(?,?,?,?,?)";
+            object = new Object[]{ID, Nombre, Apellido, Direccion, Telefono};
+            Insertar(Sql, object);
+            cliente = clientes();
+            cliente.forEach(item -> {
+                IDCliente = item.getIdCliente();
+                Id = item.getID();
+            });
+            Sql = "Insert Into ReporteClientes (IDCliente,SaldoActual,FechaActual,"
+                    + "UltimoPago,FechaPago,ID)"
+                    + "Values(?,?,?,?,?,?)";
+            object = new Object[]{IDCliente, "$0.00", "Sin Fecha", "$0.00", "Sin Fecha", Id};
+            Insertar(Sql, object);
+            valor = true;
+        }
+        return valor;
     }
 
     public List<Clientes> getClientes() {
@@ -108,25 +118,40 @@ public class Cliente extends Consulta implements Printable {
         return modelo2;
     }
 
-    public void ActualizarClientes(String ID, String Nombre, String Apellido,
+    public boolean ActualizarClientes(String ID, String Nombre, String Apellido,
             String Direccion, String Telefono, int IDCliente) {
-        Sql = "UPDATE Clientes SET IDCliente = ?, Nombres = ?, Apellidos = ?,"
-                + " Direccion = ?, Telefono = ? WHERE IDCliente =" + IDCliente;
-        Object[] cliente = new Object[]{ID, Nombre, Apellido, Direccion, Telefono};
-        Actualizar(Sql, cliente);
-        List<ReporteClientes> reportes = reportesClientes(IDCliente);
-        int IDRegistro = reportes.get(0).getIDRegistro();
-        int IdCliente = reportes.get(0).getIDCliente();
-        String SaldoActual = reportes.get(0).getSaldoActual();
-        String FechaActual = reportes.get(0).getFechaActual();
-        String UltimoPago = reportes.get(0).getUltimoPago();
-        String FechaPago = reportes.get(0).getFechaPago();
-        String Id = ID;
-        Sql = "UPDATE ReporteClientes Set IDCliente = ?, SaldoActual = ?, FechaActual = ?, "
-                + ", UltimoPago = ?, FechaPago = ?, ID = ? WHERE IDRegistro =" + IDRegistro;
-        Object[] reporte = new Object[]{IDCliente, SaldoActual, FechaActual, UltimoPago, FechaPago, Id};
-        Actualizar(Sql, reporte);
+        boolean valor = false;
 
+        cliente = clientes();
+        clienteFilter = cliente.stream()
+                .filter(c -> c.getID().equals(ID))
+                .collect(Collectors.toList());
+        int count = clienteFilter.size();
+        clienteFilter = cliente.stream()
+                .filter(c -> c.getIdCliente() == IDCliente)
+                .collect(Collectors.toList());
+        if (0 == count || ID.equals(clienteFilter.get(0).getID())) {
+
+            Sql = "UPDATE Clientes SET IDCliente = ?, Nombres = ?, Apellidos = ?,"
+                    + " Direccion = ?, Telefono = ? WHERE IDCliente =" + IDCliente;
+            Object[] cliente = new Object[]{ID, Nombre, Apellido, Direccion, Telefono};
+            Actualizar(Sql, cliente);
+            List<ReporteClientes> reportes = reportesClientes(IDCliente);
+            int IDRegistro = reportes.get(0).getIDRegistro();
+            int IdCliente = reportes.get(0).getIDCliente();
+            String SaldoActual = reportes.get(0).getSaldoActual();
+            String FechaActual = reportes.get(0).getFechaActual();
+            String UltimoPago = reportes.get(0).getUltimoPago();
+            String FechaPago = reportes.get(0).getFechaPago();
+            String Id = ID;
+            Sql = "UPDATE ReporteClientes Set IDCliente = ?, SaldoActual = ?, FechaActual = ?, "
+                    + ", UltimoPago = ?, FechaPago = ?, ID = ? WHERE IDRegistro =" + IDRegistro;
+            Object[] reporte = new Object[]{IDCliente, SaldoActual, FechaActual, UltimoPago, FechaPago, Id};
+            Actualizar(Sql, reporte);
+            valor = true;
+            
+        }
+        return valor;
     }
 
     public void EliminarCliente(int IDCliente, int idRegistro) {
@@ -159,7 +184,7 @@ public class Cliente extends Consulta implements Printable {
 
     }
 
-    public void ImprimirRecibo( JPanel panel) {
+    public void ImprimirRecibo(JPanel panel) {
         this.panel = panel;
         PrinterJob printerJob = PrinterJob.getPrinterJob();
         printerJob.setPrintable(this);

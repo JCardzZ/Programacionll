@@ -21,3 +21,7 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/POS/LoginVideo29092017/Prueba/build/
+/POS/LoginVideo29092017/Prueba/nbproject/private/
+/POS/Punto de ventas/build/
+/POS/Punto de ventas/nbproject/private/
